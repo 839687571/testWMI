@@ -133,7 +133,7 @@ public:
 
 	void connect();
 
-	wmiValues request(std::vector<std::string> valuesToGet);
+	///wmiValues request(std::vector<std::string> valuesToGet);
 
 private:
 

@@ -531,63 +531,66 @@ void WMI_Helper::getStorage()
 }
 
 
-
+/*
 WMI_Helper::wmiValues WMI_Helper::request(std::vector<std::string> valuesToGet)
 {
-    IWbemClassObject *pclsObj;
-    ULONG uReturn = 0;
+IWbemClassObject *pclsObj;
+ULONG uReturn = 0;
 
-	wmiValues result;
-	unsigned int numValuesToGet = valuesToGet.size();
+wmiValues result;
+unsigned int numValuesToGet = valuesToGet.size();
 
-	//reset the enumerator back to the start, to allow for multiple requests
-	m_enumerator->Reset();
-   
-	//loop through every item that was found
-	while (m_enumerator)
-    {
-		//get the next item
-        HRESULT hr = m_enumerator->Next(WBEM_INFINITE, 1, &pclsObj, &uReturn);
+//reset the enumerator back to the start, to allow for multiple requests
+m_enumerator->Reset();
 
-        if(uReturn == 0)
-        {
-            break;
-        }
-       
-		wmiValue valueToAdd;
+//loop through every item that was found
+while (m_enumerator)
+{
+//get the next item
+HRESULT hr = m_enumerator->Next(WBEM_INFINITE, 1, &pclsObj, &uReturn);
 
-		//for each value that the user requested
-		for(unsigned int i = 0; i < numValuesToGet; i++)
-		{
-			//get the next value from the requested list
-			std::string valueName = valuesToGet.at(i);
-
-			//convert to a wstring
-			std::wstring stemp = std::wstring(valueName.begin(), valueName.end());
-
-			VARIANT vtProp;
-
-			// Get the value of the requested property
-			hr = pclsObj->Get(stemp.c_str(), 0, &vtProp, 0, 0);
-
-			//if this value wasn't found
-			if(FAILED(hr))
-			{
-				std::stringstream error;
-				error << "Failed to find value for " << valueName;
-				throw std::exception(error.str().c_str());
-			}
-			
-			//add to the map
-			valueToAdd[valueName] = vtProp;
-		}
-
-		//add the new map of values to the result vector
-		result.push_back(valueToAdd);
-
-        pclsObj->Release();
-    }
-
-	//return the generated vector of maps
-	return result;
+if(uReturn == 0)
+{
+break;
 }
+
+wmiValue valueToAdd;
+
+//for each value that the user requested
+for(unsigned int i = 0; i < numValuesToGet; i++)
+{
+//get the next value from the requested list
+std::string valueName = valuesToGet.at(i);
+
+//convert to a wstring
+std::wstring stemp = std::wstring(valueName.begin(), valueName.end());
+
+VARIANT vtProp;
+
+// Get the value of the requested property
+hr = pclsObj->Get(stemp.c_str(), 0, &vtProp, 0, 0);
+
+//if this value wasn't found
+if(FAILED(hr))
+{
+std::stringstream error;
+error << "Failed to find value for " << valueName;
+throw std::exception(error.str().c_str());
+}
+
+//add to the map
+valueToAdd[valueName] = vtProp;
+}
+
+//add the new map of values to the result vector
+result.push_back(valueToAdd);
+
+pclsObj->Release();
+}
+
+//return the generated vector of maps
+return result;
+}
+ 
+*/
+
