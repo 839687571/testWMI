@@ -3,6 +3,62 @@
 #include <sstream>
 #include <iostream>
 
+using namespace  std;
+
+static std::wstring RAMFormFactors[24] {
+	L"Unknown form factor",
+		L"",
+		L"SIP",
+		L"DIP",
+		L"ZIP",
+		L"SOJ",
+		L"Proprietary",
+		L"SIMM",
+		L"DIMM",
+		L"TSOP",
+		L"PGA",
+		L"RIMM",
+		L"SODIMM",
+		L"SRIMM",
+		L"SMD",
+		L"SSMP",
+		L"QFP",
+		L"TQFP",
+		L"SOIC",
+		L"LCC",
+		L"PLCC",
+		L"BGA",
+		L"FPBGA",
+		L"LGA"
+};
+static wstring RAMMemoryTypes[26] {
+	L"DDR3",
+		L"",
+		L"SDRAM",
+		L"Cache DRAM",
+		L"EDO",
+		L"EDRAM",
+		L"VRAM",
+		L"SRAM",
+		L"RAM",
+		L"ROM",
+		L"Flash",
+		L"EEPROM",
+		L"FEPROM",
+		L"CDRAM",
+		L"3DRAM",
+		L"SDRAM",
+		L"SGRAM",
+		L"RDRAM",
+		L"DDR",
+		L"DDR2",
+		L"DDR2 FB-DIMM",
+		L"DDR2",
+		L"DDR3",
+		L"FBD2"
+};
+
+
 
 WMI_Helper::WMI_Helper(std::string wmi_namespace, std::string wmi_class, bool autoconnect/*=true*/):
 	m_wmi_namespace(wmi_namespace),
@@ -374,20 +430,77 @@ void WMI_Helper::getCpuInfo()
 	pEnumerator->Release();
 }
 
-void WMI_Helper::getMemInfo()
+std::wstring getActualPhysicalMemory(HRESULT hres,
+	IWbemServices *pSvc,
+	IWbemLocator *pLoc)
 {
-	HRESULT hres;
-	IEnumWbemClassObject* pEnumerator = NULL;
-	hres = m_pSvc->ExecQuery(
+	std::wstring ram;
+	IEnumWbemClassObject *pEnumerator = NULL;
+	hres = pSvc->ExecQuery(
 		bstr_t("WQL"),
-		bstr_t("SELECT * FROM Win32_Processor"),
+		bstr_t("SELECT * FROM Win32_PhysicalMemory"),
 		WBEM_FLAG_FORWARD_ONLY | WBEM_FLAG_RETURN_IMMEDIATELY,
 		NULL,
 		&pEnumerator);
 
 	if (FAILED(hres)) {
 		std::stringstream error;
-		error << "Failed to find value for " << "BuildNumber"
+		error << "Query for operating system name failed"
+			<< " Error code = 0x"
+			<< std::hex << hres << std::endl;
+		throw std::exception(error.str().c_str());
+	}
+	IWbemClassObject *pclsObj = NULL;
+	ULONG uReturn = 0;
+	double accumulatedRAM = 0;
+	while (pEnumerator) {
+		HRESULT hr = pEnumerator->Next(WBEM_INFINITE, 1,
+			&pclsObj, &uReturn);
+
+		if (0 == uReturn) {
+			break;
+		}
+
+		VARIANT vtProp;
+
+		hr = pclsObj->Get(L"Capacity", 0, &vtProp, 0, 0);
+		double cap;
+		double capacity;
+
+		std::wstring temp;
+		TCHAR tempChar[100];
+		temp = vtProp.bstrVal;
+		wcscpy(tempChar, temp.c_str());
+		swscanf(tempChar, L"%lf", &cap);
+
+		cap /= (pow(1024, 3));
+		accumulatedRAM += cap;
+		VariantClear(&vtProp);
+
+		pclsObj->Release();
+	}
+	TCHAR capacityStrBuff[100];
+	_swprintf(capacityStrBuff, L"%.2lf", accumulatedRAM);
+	ram = std::wstring(capacityStrBuff);
+	pEnumerator->Release();
+	return ram;
+}
+
+
+void WMI_Helper::getRamInfo()
+{
+	HRESULT hres;
+	IEnumWbemClassObject* pEnumerator = NULL;
+	hres = m_pSvc->ExecQuery(
+		bstr_t("WQL"),
+		bstr_t("SELECT * FROM Win32_PhysicalMemory"),
+		WBEM_FLAG_FORWARD_ONLY | WBEM_FLAG_RETURN_IMMEDIATELY,
+		NULL,
+		&pEnumerator);
+
+	if (FAILED(hres)) {
+		std::stringstream error;
+		error << "Query for operating system name failed"
 			<< " Error code = 0x"
 			<< std::hex << hres << std::endl;
 		throw std::exception(error.str().c_str());
@@ -405,33 +518,54 @@ void WMI_Helper::getMemInfo()
 		VARIANT vtProp;
 
 		// Get the value of the Name property
-		hr = pclsObj->Get(L"Name", 0, &vtProp, 0, 0);
-		if (FAILED(hr)) {
-			std::stringstream error;
-			error << "Failed to get : " << "Name" << " Error code = 0x"
-				<< std::hex << hres << std::endl;
-			throw std::exception(error.str().c_str());
+		//format
+		//gb channel ddr @ mhz (no timings yet)
+
+		std::wstring clockStr;
+		UINT32 clock;
+		UINT16 formFactor;
+		std::wstring name;
+		std::wstring formFactorStr;
+		std::wstring memoryTypeStr;
+		UINT16 memoryType;
+		//TCHAR capacityStrBuff[10];
+		TCHAR clockStrBuff[10];
+
+		// Get the value of the Name property
+		hr = pclsObj->Get(L"FormFactor", 0, &vtProp, 0, 0);
+		formFactor = vtProp.uintVal;
+		if (formFactor < 24 && formFactor >= 0) {
+			formFactorStr = RAMFormFactors[formFactor];
 		}
-		std::wstring fullCPUString; //name + @clock
+
+		hr = pclsObj->Get(L"MemoryType", 0, &vtProp, 0, 0);
+		memoryType = vtProp.uintVal;
+		if (memoryType < 26 && memoryType >= 0) {
+			memoryTypeStr = RAMMemoryTypes[memoryType];
+		}
+		hr = pclsObj->Get(L"Speed", 0, &vtProp, 0, 0);
+		clock = vtProp.uintVal;
+		wsprintf(clockStrBuff, L"%d", clock);
+		clockStr = wstring(clockStrBuff);
+
+		hr = pclsObj->Get(L"Capacity", 0, &vtProp, 0, 0);
+		wstring ram = L"0";
 		if (vtProp.bstrVal) {
-			fullCPUString = vtProp.bstrVal;
+			double cap;
+			std::wstring temp;
+			TCHAR tempChar[100];
+			temp = vtProp.bstrVal;
+			wcscpy(tempChar, temp.c_str());
+			swscanf(tempChar, L"%lf", &cap);
+
+			cap /= (pow(1024, 3));
+			TCHAR capacityStrBuff[100];
+			_swprintf(capacityStrBuff, L"%.2lf", cap);
+			ram = std::wstring(capacityStrBuff);
 		}
-		setCpuString(fullCPUString);
-
-
-		hr = pclsObj->Get(L"NumberOfCores", 0, &vtProp, 0, 0);
-		if (FAILED(hr)) {
-			std::stringstream error;
-			error << "Failed to get : " << "NumberOfCores"
-				<< " Error code = 0x"
-				<< std::hex << hres << std::endl;
-			throw std::exception(error.str().c_str());
-		}
-		int numberCores = 0;
-		numberCores = vtProp.iVal;
-		setNumberCores(numberCores);
-
-
+		ramInfos.push_back(ram +
+			L" GB " + formFactorStr + L" " + memoryTypeStr + L" " + clockStr + L"MHz");
+		
 		VariantClear(&vtProp);
 		pclsObj->Release();
 	}

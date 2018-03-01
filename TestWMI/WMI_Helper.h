@@ -40,6 +40,21 @@ typedef struct  _storageInfo{
 	}
 }storageInfo;
 
+// typedef struct  _ramInfo {
+// 	std::wstring name;
+// 	int64_t  size;
+// 	_ramInfo()
+// 	{
+// 		name =  L"";
+// 		size = 0;
+// 	}
+// 	_ramInfo(const _ramInfo &info)
+// 	{
+// 		name = info.name;
+// 		size = info.size;
+// 	}
+// }ramInfo;
+
 typedef struct _osInfo {
 	std::wstring name;
 	std::wstring buildNumber;
@@ -79,7 +94,7 @@ public:
 	void getCpuInfo();
 
 	// 内存信息 型号,大小
-	void getMemInfo();
+	void getRamInfo();
 
 	// 硬盘大小 总大小 可用
 	void getStorage();
@@ -126,8 +141,10 @@ public:
 	std::wstring memSize;
 
 	// 盘符, 总大小, 可用大小
-
 	std::vector<storageInfo> diskInfo;
+
+	//  内存. 可能插多个内存条.
+	std::vector <std::wstring> ramInfos;
 
 public:
 

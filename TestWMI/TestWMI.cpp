@@ -31,6 +31,14 @@ int _tmain(int argc, _TCHAR* argv[])
 		wmi.getCpuInfo();
 		std::wcout << L"CPU info :" << wmi.cpuString << L"    CPU Cores:" << wmi.numberCores << endl;
 
+		wmi.getRamInfo();
+		std::wcout << L"Logical Ram Info:" << endl;
+		int iSizeRam = wmi.ramInfos.size();
+		for (int i = 0; i < iSizeRam; i++) {
+			std::wcout << wmi.ramInfos.at(i) << endl;
+		}
+
+
 		wmi.getStorage();
 		int iSize = wmi.diskInfo.size();
 
@@ -38,8 +46,8 @@ int _tmain(int argc, _TCHAR* argv[])
 		std::wcout << L"Logical disk Number:" << iSize << endl;
 		for (int i = 0; i < iSize; i++) {
 			auto &v = wmi.diskInfo.at(i);
-			float totalGBSize = v.totalSize * 1.0 / (1024 * 1024 * 1024);
-			float freeSize = v.totalSize * 1.0 / (1024 * 1024 * 1024);
+			double totalGBSize = v.totalSize * 1.0 / (1024 * 1024 * 1024);
+			double freeSize = v.totalSize * 1.0 / (1024 * 1024 * 1024);
 			std::wstringstream buf;
 			buf << std::setiosflags(std::ios::fixed)  << std::setprecision(1) << totalGBSize;
 			std::wstring sTotalGbSize = buf.str();
