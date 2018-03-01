@@ -46,8 +46,8 @@ int _tmain(int argc, _TCHAR* argv[])
 		std::wcout << L"Logical disk Number:" << iSize << endl;
 		for (int i = 0; i < iSize; i++) {
 			auto &v = wmi.diskInfo.at(i);
-			double totalGBSize = v.totalSize * 1.0 / (1024 * 1024 * 1024);
-			double freeSize = v.totalSize * 1.0 / (1024 * 1024 * 1024);
+			double totalGBSize = v.totalSize * 1.0 / pow(1024, 3);
+			double freeSize = v.totalSize * 1.0 / pow(1024, 3);
 			std::wstringstream buf;
 			buf << std::setiosflags(std::ios::fixed)  << std::setprecision(1) << totalGBSize;
 			std::wstring sTotalGbSize = buf.str();
