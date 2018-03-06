@@ -3,6 +3,7 @@
 #include <sstream>
 #include <iostream>
 
+
 using namespace  std;
 
 static std::wstring RAMFormFactors[24] {
@@ -57,7 +58,6 @@ static wstring RAMMemoryTypes[26] {
 		L"DDR3",
 		L"FBD2"
 };
-
 
 
 WMI_Helper::WMI_Helper(std::string wmi_namespace, std::string wmi_class, bool autoconnect/*=true*/):
@@ -664,6 +664,77 @@ void WMI_Helper::getStorage()
 	pEnumerator->Release();
 }
 
+void WMI_Helper::getSystemModel()
+{
+	HRESULT hres;
+	IEnumWbemClassObject* pEnumerator = NULL;
+	hres = m_pSvc->ExecQuery(
+		bstr_t("WQL"),
+		bstr_t("SELECT * FROM Win32_ComputerSystem"),
+		WBEM_FLAG_FORWARD_ONLY | WBEM_FLAG_RETURN_IMMEDIATELY,
+		NULL,
+		&pEnumerator);
+
+	if (FAILED(hres)) {
+		std::stringstream error;
+		error << "Query for Win32_ComputerSystem."
+			<< " Error code = 0x"
+			<< std::hex << hres << std::endl;
+		throw std::exception(error.str().c_str());
+	}
+	IWbemClassObject *pclsObj = NULL;
+	ULONG uReturn = 0;
+
+	std::wstring Manufacturer, Model, SystemType;
+	while (pEnumerator) {
+		HRESULT hr = pEnumerator->Next(WBEM_INFINITE, 1,
+			&pclsObj, &uReturn);
+
+		if (0 == uReturn) {
+			break;
+		}
+
+		VARIANT vtProp;
+		// Get the value of the Name property
+		hr = pclsObj->Get(L"Manufacturer", 0, &vtProp, 0, 0);
+		if (FAILED(hr)) {
+			std::stringstream error;
+			error << "Failed to get : " << "Manufacturer" << " Error code = 0x"
+				<< std::hex << hres << std::endl;
+			throw std::exception(error.str().c_str());
+		}
+		if (vtProp.bstrVal) {
+			Manufacturer = vtProp.bstrVal;
+		}
+
+		hr = pclsObj->Get(L"Model", 0, &vtProp, 0, 0);
+		if (FAILED(hr)) {
+			std::stringstream error;
+			error << "Failed to get : " << "Model" << " Error code = 0x"
+				<< std::hex << hres << std::endl;
+			throw std::exception(error.str().c_str());
+		}
+		if (vtProp.bstrVal) {
+			Model = vtProp.bstrVal;
+		}
+
+		hr = pclsObj->Get(L"SystemType", 0, &vtProp, 0, 0);
+		if (FAILED(hr)) {
+			std::stringstream error;
+			error << "Failed to get : " << "SystemType" << " Error code = 0x"
+				<< std::hex << hres << std::endl;
+			throw std::exception(error.str().c_str());
+		}
+		if (vtProp.bstrVal) {
+			SystemType = vtProp.bstrVal;
+		}
+
+		VariantClear(&vtProp);
+		pclsObj->Release();
+	}
+	pEnumerator->Release();
+	boisString = L"System Model:" + Manufacturer +  Model + SystemType;
+}
 
 /*
 WMI_Helper::wmiValues WMI_Helper::request(std::vector<std::string> valuesToGet)

@@ -25,6 +25,10 @@ int _tmain(int argc, _TCHAR* argv[])
 			<< "   Archtecture:" << wmi.osInfo.architecture
 			<< "   CSDVersion:" << wmi.osInfo.csdversion << endl;
 
+		wmi.getSystemModel();
+		std::wcout << L"BOIS Info:" << wmi.boisString << endl;
+
+
 		wmi.getMonitor();
 		std::wcout << L"Monitor Resolution:" << wmi.monitorString << endl;
 

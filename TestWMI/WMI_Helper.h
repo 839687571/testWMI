@@ -86,7 +86,7 @@ public:
 
 	WMI_Helper(std::string wmi_namespace);
 	
-	// 电脑型号
+	// 系统信息
 	void  getOsInfo();
 	// 显示器 分辨率
 	void getMonitor();
@@ -99,6 +99,8 @@ public:
 	// 硬盘大小 总大小 可用
 	void getStorage();
 
+	// 硬件信息
+	void getSystemModel();
 
 
 	void setMonitorString(std::wstring str)
@@ -145,6 +147,9 @@ public:
 
 	//  内存. 可能插多个内存条.
 	std::vector <std::wstring> ramInfos;
+
+	// 
+	std::wstring boisString;
 
 public:
 
