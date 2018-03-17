@@ -61,19 +61,23 @@ static wstring RAMMemoryTypes[26] {
 
 
 
-#define   THROW_GET_EXCEPTION(NAME,RET) {\
-std::stringstream error;\
-error << "Failed to find value for " << "Name" << " Error code = 0x"\
-<< std::hex << hres << std::endl;\
+#define  THROW_GET_EXCEPTION(NAME,hrs) do \
+{\
+			std::stringstream error;\
+error << "Failed to get : " << NAME\
+<< " Error code = 0x"\
+<< std::hex << hrs << std::endl;\
 throw std::exception(error.str().c_str());\
-}
+} while (0);
 
-#define   THROW_QUERY_EXCEPTION(NAME,RET) {\
-std::stringstream error;\
-error << "Failed to Query value for " << "Name" << " Error code = 0x"\
+#define  THROW_QUERY_EXCEPTION(NAME,hrs) do \
+						{\
+		std::stringstream error;\
+error << "Query for " <<NAME \
+<< " Error code = 0x"\
 << std::hex << hres << std::endl;\
 throw std::exception(error.str().c_str());\
-		}
+						} while (0);
 
 
 
@@ -777,6 +781,7 @@ void WMI_Helper::getGPUInfo()
 
 		VariantClear(&vtProp);
 		VariantClear(&vtProp2);
+		pclsObj->Release();
 	}
 	pEnumerator->Release();
 
