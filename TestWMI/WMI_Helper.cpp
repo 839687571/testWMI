@@ -60,6 +60,23 @@ static wstring RAMMemoryTypes[26] {
 };
 
 
+
+#define   THROW_GET_EXCEPTION(NAME,RET) {\
+std::stringstream error;\
+error << "Failed to find value for " << "Name" << " Error code = 0x"\
+<< std::hex << hres << std::endl;\
+throw std::exception(error.str().c_str());\
+}
+
+#define   THROW_QUERY_EXCEPTION(NAME,RET) {\
+std::stringstream error;\
+error << "Failed to Query value for " << "Name" << " Error code = 0x"\
+<< std::hex << hres << std::endl;\
+throw std::exception(error.str().c_str());\
+		}
+
+
+
 WMI_Helper::WMI_Helper(std::string wmi_namespace, std::string wmi_class, bool autoconnect/*=true*/):
 	m_wmi_namespace(wmi_namespace),
 	m_wmi_class(wmi_class)
@@ -275,10 +292,7 @@ void  WMI_Helper::getOsInfo()
 
 		hr = pclsObj->Get(L"Name", 0, &vtProp, 0, 0);
 		if (FAILED(hr)) {
-			std::stringstream error;
-			error << "Failed to find value for " << "Name"<< " Error code = 0x"
-				<< std::hex << hres << std::endl;
-			throw std::exception(error.str().c_str());
+			THROW_GET_EXCEPTION("Name", hr);
 		}
 		std::wstring OSArchitecture;
 		std::wstring OSNameWide;
@@ -291,10 +305,7 @@ void  WMI_Helper::getOsInfo()
 		{
 			hr = pclsObj->Get(L"OSArchitecture", 0, &vtProp, 0, 0);
 			if (FAILED(hr)) {
-				std::stringstream error;
-				error << "Failed to find value for " << "OSArchitecture" << " Error code = 0x"
-					<< std::hex << hres << std::endl;
-				throw std::exception(error.str().c_str());
+				THROW_GET_EXCEPTION("OSArchitecture", hr);
 			}
 			if (vtProp.bstrVal != nullptr) {
 				OSArchitecture = vtProp.bstrVal;
@@ -318,10 +329,7 @@ void  WMI_Helper::getOsInfo()
 
 		hr = pclsObj->Get(L"BuildNumber", 0, &vtProp, 0, 0);
 		if (FAILED(hr)) {
-			std::stringstream error;
-			error << "Failed to find value for " << "BuildNumber" << " Error code = 0x"
-				<< std::hex << hres << std::endl;
-			throw std::exception(error.str().c_str());
+			THROW_GET_EXCEPTION("BuildNumber", hr);
 		}
 		if (vtProp.bstrVal != nullptr) {
 			OSBuildNumber = vtProp.bstrVal;
@@ -331,10 +339,7 @@ void  WMI_Helper::getOsInfo()
 
 		hr = pclsObj->Get(L"Version", 0, &vtProp, 0, 0);
 		if (FAILED(hr)) {
-			std::stringstream error;
-			error << "Failed to find value for " << "Version" << " Error code = 0x"
-				<< std::hex << hres << std::endl;
-			throw std::exception(error.str().c_str());
+			THROW_GET_EXCEPTION("Version", hr);
 		}
 		if (vtProp.bstrVal != nullptr) {
 			osInfo.version = vtProp.bstrVal;
@@ -342,10 +347,7 @@ void  WMI_Helper::getOsInfo()
 
 		hr = pclsObj->Get(L"CSDVersion", 0, &vtProp, 0, 0);
 		if (FAILED(hr)) {
-			std::stringstream error;
-			error << "Failed to find value for " << "CSDVersion" << " Error code = 0x"
-				<< std::hex << hres << std::endl;
-			throw std::exception(error.str().c_str());
+			THROW_GET_EXCEPTION("CSDVersion", hr);
 		}
 		if (vtProp.bstrVal != nullptr) {
 			osInfo.csdversion = vtProp.bstrVal;
@@ -399,10 +401,7 @@ void WMI_Helper::getCpuInfo()
 		// Get the value of the Name property
 		hr = pclsObj->Get(L"Name", 0, &vtProp, 0, 0);
 		if (FAILED(hr)) {
-			std::stringstream error;
-			error << "Failed to get : " << "Name" << " Error code = 0x"
-				<< std::hex << hres << std::endl;
-			throw std::exception(error.str().c_str());
+			THROW_GET_EXCEPTION("Name", hr);
 		}
 		std::wstring fullCPUString; //name + @clock
 		if (vtProp.bstrVal) {
@@ -413,11 +412,7 @@ void WMI_Helper::getCpuInfo()
 
 		hr = pclsObj->Get(L"NumberOfCores", 0, &vtProp, 0, 0);
 		if (FAILED(hr)) {
-			std::stringstream error;
-			error << "Failed to get : " << "NumberOfCores"
-				<< " Error code = 0x"
-				<< std::hex << hres << std::endl;
-			throw std::exception(error.str().c_str());
+			THROW_GET_EXCEPTION("NumberOfCores", hr);
 		}
 		int numberCores = 0;
 		numberCores = vtProp.iVal;
@@ -464,6 +459,9 @@ std::wstring getActualPhysicalMemory(HRESULT hres,
 		VARIANT vtProp;
 
 		hr = pclsObj->Get(L"Capacity", 0, &vtProp, 0, 0);
+		if (FAILED(hr)) {
+			THROW_GET_EXCEPTION("NumberOfCores", hr);
+		}
 		double cap;
 		double capacity;
 
@@ -499,11 +497,7 @@ void WMI_Helper::getRamInfo()
 		&pEnumerator);
 
 	if (FAILED(hres)) {
-		std::stringstream error;
-		error << "Query for operating system name failed"
-			<< " Error code = 0x"
-			<< std::hex << hres << std::endl;
-		throw std::exception(error.str().c_str());
+		THROW_QUERY_EXCEPTION("Win32_PhysicalMemory", hres);
 	}
 	IWbemClassObject *pclsObj = NULL;
 	ULONG uReturn = 0;
@@ -539,6 +533,9 @@ void WMI_Helper::getRamInfo()
 		}
 
 		hr = pclsObj->Get(L"MemoryType", 0, &vtProp, 0, 0);
+		if (FAILED(hr)) {
+			THROW_GET_EXCEPTION("MemoryType", hr);
+		}
 		memoryType = vtProp.uintVal;
 		if (memoryType < 26 && memoryType >= 0) {
 			memoryTypeStr = RAMMemoryTypes[memoryType];
@@ -584,11 +581,7 @@ void WMI_Helper::getStorage()
 		&pEnumerator);
 
 	if (FAILED(hres)) {
-		std::stringstream error;
-		error << "Query for getStorage."
-			<< " Error code = 0x"
-			<< std::hex << hres << std::endl;
-		throw std::exception(error.str().c_str());
+		THROW_QUERY_EXCEPTION("Win32_LogicalDisk", hres);
 	}
 	IWbemClassObject *pclsObj = NULL;
 	ULONG uReturn = 0;
@@ -676,11 +669,7 @@ void WMI_Helper::getSystemModel()
 		&pEnumerator);
 
 	if (FAILED(hres)) {
-		std::stringstream error;
-		error << "Query for Win32_ComputerSystem."
-			<< " Error code = 0x"
-			<< std::hex << hres << std::endl;
-		throw std::exception(error.str().c_str());
+		THROW_QUERY_EXCEPTION("Win32_ComputerSystem", hres);
 	}
 	IWbemClassObject *pclsObj = NULL;
 	ULONG uReturn = 0;
@@ -735,6 +724,65 @@ void WMI_Helper::getSystemModel()
 	pEnumerator->Release();
 	boisString = L"System Model:" + Manufacturer +  Model + SystemType;
 }
+void WMI_Helper::getGPUInfo()
+{
+	HRESULT hres;
+	IEnumWbemClassObject* pEnumerator = NULL;
+	hres = m_pSvc->ExecQuery(
+		bstr_t("WQL"),
+		bstr_t("SELECT * FROM Win32_VideoController"),
+		WBEM_FLAG_FORWARD_ONLY | WBEM_FLAG_RETURN_IMMEDIATELY,
+		NULL,
+		&pEnumerator);
+
+	if (FAILED(hres)) {
+		THROW_QUERY_EXCEPTION("Win32_VideoController", hres);
+	}
+
+	std::wstring gpustr;
+	IWbemClassObject *pclsObj = NULL;
+	ULONG uReturn = 0;
+	while (pEnumerator) {
+		hres = pEnumerator->Next(WBEM_INFINITE, 1,
+			&pclsObj, &uReturn);
+		if (0 == uReturn) {
+			break;
+		}
+
+		VARIANT vtProp;
+		VARIANT vtProp2;
+
+		// Get the value of the Name property
+		hres = pclsObj->Get(L"Description", 0, &vtProp, 0, 0);
+		if (FAILED(hres)) {
+			THROW_GET_EXCEPTION("Description", hres);
+		}
+		WCHAR* des;
+		des = vtProp.bstrVal;
+		gpustr += L"Description: ";
+		if (vtProp.bstrVal) {
+			gpustr += vtProp.bstrVal;
+		}
+
+		hres = pclsObj->Get(L"DriverVersion", 0, &vtProp2, 0, 0);
+		if (FAILED(hres)) {
+			THROW_GET_EXCEPTION("DriverVersion", hres);
+		}
+		gpustr += L"   DriverVersion: ";
+		if (vtProp2.bstrVal) {
+			std::wstringstream ss;
+			ss << vtProp2.bstrVal;
+			gpustr += ss.str();
+		}
+
+		VariantClear(&vtProp);
+		VariantClear(&vtProp2);
+	}
+	pEnumerator->Release();
+
+	gpuString = gpustr;
+}
+
 
 /*
 WMI_Helper::wmiValues WMI_Helper::request(std::vector<std::string> valuesToGet)

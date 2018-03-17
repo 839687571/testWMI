@@ -62,6 +62,9 @@ int _tmain(int argc, _TCHAR* argv[])
 
 			std::wcout << v.description << L"[" << v.name << L"]" << L"Total Size = " << sTotalGbSize << L" GB   Free Size = " << sFreeGbSize << L" GB" << endl;
 		}
+
+		wmi.getGPUInfo();
+		std::wcout << L"GPU info =:" << wmi.gpuString <<  std::endl;
 	}
 	catch (std::exception& e)
 	{

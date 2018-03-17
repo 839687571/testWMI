@@ -102,6 +102,9 @@ public:
 	// Ó²¼þÐÅÏ¢
 	void getSystemModel();
 
+	// GPU info
+	void getGPUInfo();
+
 
 	void setMonitorString(std::wstring str)
 	{
@@ -150,6 +153,10 @@ public:
 
 	// 
 	std::wstring boisString;
+
+
+	// gpu
+	std::wstring gpuString;
 
 public:
 
