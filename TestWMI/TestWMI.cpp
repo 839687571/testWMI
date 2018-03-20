@@ -20,6 +20,9 @@ int _tmain(int argc, _TCHAR* argv[])
 	{
 		wcout.imbue(std::locale("chs"));
 		WMI_Helper  wmi("ROOT\\CIMV2");
+
+		wmi.connect();
+
 		wmi.getOsInfo();
 		std::wcout << L"OS :" << wmi.osInfo.name << "  Build Number:" << wmi.osInfo.buildNumber 
 			<< "   Archtecture:" << wmi.osInfo.architecture

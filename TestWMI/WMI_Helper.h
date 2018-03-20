@@ -82,7 +82,7 @@ public:
 
 public:
 
-	WMI_Helper(std::string wmi_namespace, std::string wmi_class, bool autoconnect=true);
+	WMI_Helper(std::string wmi_namespace, std::string wmi_class);
 
 	WMI_Helper(std::string wmi_namespace);
 	
@@ -171,6 +171,8 @@ private:
 
 	IWbemServices *m_pSvc = NULL;
 	IWbemLocator  *m_pLoc = NULL;
+
+	bool bInitCom = false;
 
 private:
 	IEnumWbemClassObject* m_enumerator;

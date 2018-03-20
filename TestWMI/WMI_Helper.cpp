@@ -81,30 +81,33 @@ throw std::exception(error.str().c_str());\
 
 
 
-WMI_Helper::WMI_Helper(std::string wmi_namespace, std::string wmi_class, bool autoconnect/*=true*/):
+WMI_Helper::WMI_Helper(std::string wmi_namespace, std::string wmi_class):
 	m_wmi_namespace(wmi_namespace),
 	m_wmi_class(wmi_class)
 {
-	//if the user wants to autoconnect
-	if(autoconnect)
-	{
-		//start the connection
-		connect();
-	}
+	
 }
 
 WMI_Helper::WMI_Helper(std::string wmi_namespace)
 	:m_wmi_namespace(wmi_namespace)
 {
-	connect();
+
 }
 
 WMI_Helper::~WMI_Helper()
 {
-	m_pSvc->Release();
-	m_pLoc->Release();
+	if (m_pSvc) {
+		m_pSvc->Release();
+	}
+
+	if (m_pLoc) {
+		m_pLoc->Release();
+	}
+
 	//close down the WMI Service
-	CoUninitialize();
+	if (bInitCom) {
+		CoUninitialize();
+	}
 }
 
 void WMI_Helper::connect()
@@ -124,6 +127,7 @@ void WMI_Helper::connect()
 		error << "Failed to initialize COM library. Error code = 0x" << std::hex << hres;
 		throw std::exception(error.str().c_str());
     }
+	bInitCom = true;
 
 	// Step 2: --------------------------------------------------
     // Set general COM security levels --------------------------
@@ -148,8 +152,6 @@ void WMI_Helper::connect()
 	//if we failed to initialize security
     if (FAILED(hres))
     {
-		CoUninitialize();
-
 		//throw an exception, Program has failed.
         error << "Failed to initialize security. Error code = 0x" << std::hex << hres;
 		throw std::exception(error.str().c_str());
@@ -169,8 +171,6 @@ void WMI_Helper::connect()
 	//if we failed to create the initial locator to WMI
     if (FAILED(hres))
     {
-		CoUninitialize();
-
 		//throw an exception, Program has failed.
         error << "Failed to create IWbemLocator object. Error code = 0x" << std::hex << hres;
         throw std::exception(error.str().c_str());
@@ -197,9 +197,6 @@ void WMI_Helper::connect()
     
     if (FAILED(hres))
     {
-		m_pLoc->Release();
-        CoUninitialize();
-
 		//throw an exception, program has failed
         error << "Could not connect to namespace " << m_wmi_namespace << ". Error code = 0x" << std::hex << hres;
         throw std::exception(error.str().c_str());
@@ -221,10 +218,6 @@ void WMI_Helper::connect()
 
     if (FAILED(hres))
     {
-		m_pSvc->Release();
-		m_pLoc->Release();
-        CoUninitialize();
-
 		//throw an exception, Program has failed.
         error << "Could not set proxy blanket. Error code = 0x" << std::hex << hres;
 		throw std::exception(error.str().c_str());
